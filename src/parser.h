@@ -99,7 +99,7 @@ typedef struct {
 	size_t input_length;
 
 	/* number of characters read so far */
-	long position;
+	unsigned long position;
 
 	/* the character we are lexing right now */
 	char cursor;
@@ -110,7 +110,9 @@ typedef struct {
 
 } openvcd_parser;
 
+/**** UTILITIES **************************************************************/
 
+#define OPENVCD_IS_WHITESPACE(_ch) ( ((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\n') || ((_ch) == '\r') )
 
 /**** PROTOTYPES *************************************************************/
 
@@ -216,3 +218,10 @@ void openvcd_free_token(openvcd_token* t);
  * @return
  */
 openvcd_token* openvcd_next_token(openvcd_parser* p);
+
+/**
+ * @brief Advance the parser by one character.
+ *
+ * @param p
+ */
+void openvcd_next_char(openvcd_parser* p);

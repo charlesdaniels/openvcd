@@ -26,7 +26,7 @@ openvcd_parser* openvcd_new_parser(openvcd_parser_type type, openvcd_input_sourc
 		asprintf( &(p->error_string),
 			"Parser allocated with non-stream input type, but no length provided.");
 	}
-	
+
 	return p;
 }
 
@@ -75,5 +75,89 @@ void openvcd_free_token(openvcd_token* t) {
 }
 
 openvcd_token* openvcd_next_token(openvcd_parser* p) {
-	return openvcd_new_token("TODO");
+	char* read_text;
+	unsigned long pos;
+	size_t text_size;
+	openvcd_token* t;
+	char* temp;
+
+	read_text = malloc(sizeof(char) * 10);
+	if (read_text == NULL) {return NULL;}
+	read_text[0] = '\0';
+	pos = 0;
+	text_size = 10;
+
+
+	/* ensure there is at least one character ready to go, and also eat
+	 * whitespace */
+	do { openvcd_next_char(p); } while (OPENVCD_IS_WHITESPACE(p->cursor));
+
+	while (p->state != OPENVCD_PARSER_STATE_EOF) {
+		if (OPENVCD_IS_WHITESPACE(p->cursor)) { break; }
+
+		read_text[pos] = p->cursor;
+		read_text[pos+1] = '\0';
+		pos++;
+
+		/* resize the text buffer if we run out of room */
+		if ((pos + 2) > text_size) {
+			text_size *= 2;
+			temp = realloc(read_text, text_size);
+
+			if (temp == NULL) {
+				free(read_text);
+				return NULL;
+			}
+
+			read_text = temp;
+			temp = NULL;
+		}
+
+		openvcd_next_char(p);
+	}
+
+	t = openvcd_new_tokenn(read_text, text_size);
+	free(read_text);
+	if (t == NULL) {
+		return NULL;
+	}
+
+	return t;
+}
+
+void openvcd_next_char(openvcd_parser* p) {
+	/* we were just initialized */
+	if (p->state == OPENVCD_PARSER_STATE_INITIALIZED) {
+		p->state = OPENVCD_PARSER_STATE_RUNNING;
+		p->position = 0;
+
+		if (p->type == OPENVCD_PARSER_STRING) {
+			/* case where we get called on an empty string */
+			if (p->input_length < 1) {
+				p->state = OPENVCD_PARSER_STATE_EOF;
+				p->cursor = '\0';
+			} else {
+				p->cursor = p->source.input_string[0];
+			}
+
+		} else {
+			fprintf(stderr, "READING FROM FILE NOT IMPLEMENTED YET\n");
+			exit(1);
+		}
+	} else {
+		p->position++;
+		if (p->type == OPENVCD_PARSER_STRING) {
+			if (p->position >= p->input_length) {
+				p->state = OPENVCD_PARSER_STATE_EOF;
+				p->cursor = '\0';
+			} else {
+				p->cursor = p->source.input_string[p->position];
+			}
+
+		} else {
+			fprintf(stderr, "READING FROM FILE NOT IMPLEMENTED YET\n");
+			exit(1);
+		}
+
+	}
 }

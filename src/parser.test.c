@@ -15,7 +15,7 @@ void test_lexing(void) {
 	openvcd_input_source s;
 	char* lexing_test_input;
 
-	asprintf(&lexing_test_input, "tok1 $tok2 XXXtok3 tok4!__ 1234tok5\ntok6\ttok7");
+	asprintf(&lexing_test_input, "tok1 $tok2 XXXtok3 tok4!__ 1234tok5\ntok6\ttok7 looooooooonnnnngggggggggggtok8");
 
 	/* these make the C compiler sad if you put them in as literals, since
 	 * it tries to expand the backslash and gets confused  */
@@ -55,6 +55,10 @@ void test_lexing(void) {
 
 	t = openvcd_next_token(p);
 	str_should_equal(t->literal, "tok7");
+	openvcd_free_token(t);
+
+	t = openvcd_next_token(p);
+	str_should_equal(t->literal, "looooooooonnnnngggggggggggtok8");
 	openvcd_free_token(t);
 
 	openvcd_free_parser(p);

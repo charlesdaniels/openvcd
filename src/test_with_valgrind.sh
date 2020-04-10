@@ -21,3 +21,6 @@ if [ $(echo "$VALGRIND_OUTPUT" | awk '($2 =="ERROR" && $3 == "SUMMARY:" && $4 > 
 	echo "MEMORY ERRORS DETECTED!" 1>&2
 	exit 1
 fi
+
+# get the exit code if the test fails normally
+$1

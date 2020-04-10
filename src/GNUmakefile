@@ -11,7 +11,7 @@ OBJ = parser.o
 ifeq "$(TEST_WITH_VALGRIND)" "YES"
 	TESTCMD = sh ./test_with_valgrind.sh
 else
-	TESTCMD = 
+	TESTCMD =
 endif
 
 tests: parser.test
