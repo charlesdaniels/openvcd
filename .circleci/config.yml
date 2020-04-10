@@ -13,7 +13,7 @@ jobs:
       - image: herc/nocsim_ci:latest
     steps:
       - checkout
-      - make RUN_TESTS=YES TEST_WITH_VALGRIND=YES CFLAGS="-std=c99 -Wall -Wextra -pedantic -Werror -O0 -g3" -C src
+      - run: make RUN_TESTS=YES TEST_WITH_VALGRIND=YES CFLAGS="-std=c99 -Wall -Wextra -pedantic -Werror -O0 -g3" -C src
 
   quality:
     docker:
