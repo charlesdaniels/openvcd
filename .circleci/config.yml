@@ -1,0 +1,24 @@
+version: 2
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - tests
+      - quality
+
+jobs:
+  tests:
+    docker:
+      - image: herc/nocsim_ci:latest
+    steps:
+      - checkout
+      - make RUN_TESTS=YES TEST_WITH_VALGRIND=YES CFLAGS="-std=c99 -Wall -Wextra -pedantic -Werror -O0 -g3" -C src
+
+  quality:
+    docker:
+      - image: herc/nocsim_ci:latest
+    steps:
+      - checkout
+      - run: lizard src/
+
