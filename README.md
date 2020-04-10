@@ -1,2 +1,3 @@
-# openvcd
-open source VCD parser
+# OpenVCD
+
+
