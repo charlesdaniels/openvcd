@@ -26,6 +26,7 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "vec.h"
 
@@ -73,7 +74,24 @@ typedef enum {
 	 * which requires an input length, but none (e.g. 0) has been provided.
 	 */
 	OPENVCD_ERROR_NO_LENGTH,
+
+	/* An error occurred while attempting to read a new token */
+	OPENVCD_ERROR_TOKEN,
+
+	/* An attempt to allocate memory failed */
+	OPENVCD_ERROR_ALLOC_FAILED,
+
+	/* A syntax error occured while parsing */
+	OPENVCD_ERROR_SYNTAX,
 } openvcd_parser_error;
+
+#define OPENVCD_PARSER_ERROR_TO_STR(_err) \
+	(_err == OPENVCD_ERROR_NONE) ? "NONE" : \
+	(_err == OPENVCD_ERROR_GENERAL) ? "GENERAL" : \
+	(_err == OPENVCD_ERROR_NO_LENGTH) ? "NO LENGTH" : \
+	(_err == OPENVCD_ERROR_TOKEN) ? "TOKEN" : \
+	(_err == OPENVCD_ERROR_SYNTAX) ? "SYNTAX" : \
+	(_err == OPENVCD_ERROR_ALLOC_FAILED) ? "ALLOC FAILED" : "UNKNOWN ERROR"
 
 typedef struct {
 
@@ -101,12 +119,19 @@ typedef struct {
 	/* number of characters read so far */
 	unsigned long position;
 
+	/* current line number, used for error messages */
+	unsigned long lineno;
+
 	/* the character we are lexing right now */
 	char cursor;
 
 	/* this is only safe to read if the parser state is
 	 * OPENVCD_PARSER_STATE_ERROR */
 	char* error_string;
+
+	/* used during parsing, null if not available or uninitialized */
+	openvcd_token* current_token;
+	openvcd_token* next_token;
 
 } openvcd_parser;
 
@@ -225,3 +250,37 @@ openvcd_token* openvcd_next_token(openvcd_parser* p);
  * @param p
  */
 void openvcd_next_char(openvcd_parser* p);
+
+/**
+ * @brief Parse the entire input.
+ *
+ * @param p
+ */
+void openvcd_parse(openvcd_parser* p);
+
+/**
+ * @brief Advance the parser by one token.
+ *
+ * @param p
+ */
+void openvcd_advance(openvcd_parser* p);
+
+/**
+ * @brief Parse a version header.
+ *
+ * @param p
+ *
+ * @return The version text in a newly malloc-ed buffer, which the caller
+ * should free appropriate.
+ */
+char* openvcd_parse_version(openvcd_parser* p);
+
+/**
+ * @brief Return true if the token and string match.
+ *
+ * @param t
+ * @param s
+ *
+ * @return
+ */
+bool openvcd_token_eq_str(openvcd_token* t, char* s);

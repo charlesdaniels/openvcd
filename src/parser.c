@@ -19,6 +19,9 @@ openvcd_parser* openvcd_new_parser(openvcd_parser_type type, openvcd_input_sourc
 	p->position = 0;
 	p->cursor = '\0';
 	p->error_string = NULL;
+	p->current_token = NULL;
+	p->next_token = NULL;
+	p->lineno = 0;
 
 	if ((input_length == 0) && (type != OPENVCD_PARSER_FILE)) {
 		p->state = OPENVCD_PARSER_STATE_ERROR;
@@ -32,6 +35,8 @@ openvcd_parser* openvcd_new_parser(openvcd_parser_type type, openvcd_input_sourc
 
 void openvcd_free_parser(openvcd_parser* p) {
 	openvcd_clear_error(p);
+	if (p->current_token != NULL){ openvcd_free_token(p->current_token); }
+	if (p->next_token != NULL){ openvcd_free_token(p->next_token); }
 	free(p);
 }
 
@@ -81,12 +86,15 @@ openvcd_token* openvcd_next_token(openvcd_parser* p) {
 	openvcd_token* t;
 	char* temp;
 
+	if (p->state == OPENVCD_PARSER_STATE_EOF) {
+		return NULL;
+	}
+
 	read_text = malloc(sizeof(char) * 10);
 	if (read_text == NULL) {return NULL;}
 	read_text[0] = '\0';
 	pos = 0;
 	text_size = 10;
-
 
 	/* ensure there is at least one character ready to go, and also eat
 	 * whitespace */
@@ -105,6 +113,11 @@ openvcd_token* openvcd_next_token(openvcd_parser* p) {
 			temp = realloc(read_text, text_size);
 
 			if (temp == NULL) {
+
+				p->state = OPENVCD_PARSER_STATE_ERROR;
+				p->error = OPENVCD_ERROR_ALLOC_FAILED;
+				asprintf(&(p->error_string),
+					"failed to allocate space to read next token");
 				free(read_text);
 				return NULL;
 			}
@@ -119,6 +132,12 @@ openvcd_token* openvcd_next_token(openvcd_parser* p) {
 	t = openvcd_new_tokenn(read_text, text_size);
 	free(read_text);
 	if (t == NULL) {
+		p->state = OPENVCD_PARSER_STATE_ERROR;
+		p->error = OPENVCD_ERROR_TOKEN;
+		asprintf(&(p->error_string),
+			"failed to create token from text '%s' of length %ld",
+			read_text,
+			text_size );
 		return NULL;
 	}
 
@@ -138,6 +157,7 @@ void openvcd_next_char(openvcd_parser* p) {
 				p->cursor = '\0';
 			} else {
 				p->cursor = p->source.input_string[0];
+				if (p->cursor == '\n') { p->lineno ++; }
 			}
 
 		} else {
@@ -160,4 +180,81 @@ void openvcd_next_char(openvcd_parser* p) {
 		}
 
 	}
+}
+
+void openvcd_advance(openvcd_parser* p) {
+	if (p->state != OPENVCD_PARSER_STATE_RUNNING) {
+		/* presumably we have reached EOF or have an error that is
+		 * not handled yet. */
+		return;
+	}
+
+	if (p->current_token != NULL) {
+		openvcd_free_token(p->current_token);
+	}
+	p->current_token = p->next_token;
+	p->next_token = openvcd_next_token(p);
+}
+
+char* openvcd_parse_version(openvcd_parser* p) {
+	char* version_text;
+	char* temp;
+
+	/* consume $version */
+	openvcd_advance(p);
+
+	version_text = NULL;
+
+	while(!openvcd_token_eq_str(p->next_token, "$end")) {
+		openvcd_advance(p);
+
+		if (p->state == OPENVCD_PARSER_STATE_EOF) {
+			p->state = OPENVCD_PARSER_STATE_ERROR;
+			p->error = OPENVCD_ERROR_SYNTAX;
+			asprintf(&(p->error_string),
+				"syntax error on line %lu, got EOF while parsing $version",
+				p->lineno);
+			return NULL;
+		}
+
+		if (p->state != OPENVCD_PARSER_STATE_RUNNING) {
+			return NULL;
+		}
+
+		if (p->current_token != NULL) {
+			if (version_text == NULL) {
+				version_text = strndup(
+						p->current_token->literal,
+						p->current_token->length);
+			} else {
+				asprintf(&temp, "%s %s",
+						version_text,
+						p->current_token->literal);
+				free(version_text);
+				version_text = temp;
+			}
+		}
+	}
+
+	return version_text;
+}
+
+void openvcd_parse(openvcd_parser* p) {
+	p->current_token = NULL;
+	p->next_token = openvcd_next_token(p);
+
+	while(p->state == OPENVCD_PARSER_STATE_RUNNING) {
+
+		if (openvcd_token_eq_str(p->next_token, "$version")) {
+			openvcd_parse_version(p);
+		}
+
+		openvcd_advance(p);
+
+	}
+
+}
+
+bool openvcd_token_eq_str(openvcd_token* t, char* s) {
+	return (strncmp(t->literal, s, t->length) == 0);
 }

@@ -43,9 +43,6 @@
  */
 
 
-
-
-
 #ifndef TEST_UTIL
 #define TEST_UTIL
 
@@ -95,5 +92,20 @@
 #define should_not_be_null(expr) do { \
 		if ((expr) == NULL) { fail("'%s' should not have been NULL and was not", #expr); } \
 	} while(0)
+
+#define check_parser_error(_parser) do { \
+		if (_parser->state == OPENVCD_PARSER_STATE_ERROR) { \
+			if (_parser->error_string != NULL) { \
+				fail("parser is in error state %s: %s\n", \
+					OPENVCD_PARSER_ERROR_TO_STR(_parser->error), \
+					_parser->error_string); \
+			} else { \
+				fail("parser is in error state %s: %s\n", \
+					OPENVCD_PARSER_ERROR_TO_STR(_parser->error), \
+					"error string is unset"); \
+			} \
+		} \
+	} while(0); \
+
 
 #endif /* TEST_UTIL */
