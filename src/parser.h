@@ -21,14 +21,16 @@
  * as well as eliminates a dependency on an external parser generator.
  */
 
+#ifndef OPENVCD_PARSER_H
+#define OPENVCD_PARSER_H
+
 /**** INCLUDES ***************************************************************/
 
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
-#include "vec.h"
+#include <string.h>
 
 /**** TYPES ******************************************************************/
 
@@ -268,6 +270,10 @@ void openvcd_advance(openvcd_parser* p);
 /**
  * @brief Parse a version header.
  *
+ * NOTE: ISO 1800-2012 Syntax 21-20 specifies that this should be parsed as
+ * $version [ version_text system_task ]. Currently, any included system task
+ * will simply be parsed as a string and included in the version text.
+ *
  * @param p
  *
  * @return The version text in a newly malloc-ed buffer, which the caller
@@ -284,3 +290,32 @@ char* openvcd_parse_version(openvcd_parser* p);
  * @return
  */
 bool openvcd_token_eq_str(openvcd_token* t, char* s);
+
+/** @brief Parse a date header.
+ *
+ * @param p
+ *
+ * @return The date text in a newly malloc-ed buffer, which the caller
+ * should free appropriate.
+ */
+char* openvcd_parse_date(openvcd_parser* p);
+
+/**
+ * @brief Accumulate tokens until finding one which matches "until"
+ *
+ * The accumulated tokens are concatenated into a single string, which is
+ * returned. The string will be heap-allocated by malloc() and must be freed
+ * by the caller.
+ *
+ * The type parameter is used only for error generation. On error,
+ * the error text will indicate a parser error while parsing "type".
+ *
+ * @param p
+ * @param until
+ * @param type 
+ *
+ * @return
+ */
+char* openvcd_parse_until(openvcd_parser* p, char* until, char* type);
+
+#endif /* OPENVCD_PARSER_H */

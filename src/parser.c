@@ -196,24 +196,23 @@ void openvcd_advance(openvcd_parser* p) {
 	p->next_token = openvcd_next_token(p);
 }
 
-char* openvcd_parse_version(openvcd_parser* p) {
-	char* version_text;
+char* openvcd_parse_until(openvcd_parser* p, char* until, char* type) {
+	char* text;
 	char* temp;
 
-	/* consume $version */
-	openvcd_advance(p);
 
-	version_text = NULL;
+	text = NULL;
 
-	while(!openvcd_token_eq_str(p->next_token, "$end")) {
+	while(!openvcd_token_eq_str(p->next_token, until)) {
 		openvcd_advance(p);
 
 		if (p->state == OPENVCD_PARSER_STATE_EOF) {
 			p->state = OPENVCD_PARSER_STATE_ERROR;
 			p->error = OPENVCD_ERROR_SYNTAX;
 			asprintf(&(p->error_string),
-				"syntax error on line %lu, got EOF while parsing $version",
-				p->lineno);
+				"syntax error on line %lu, got EOF while parsing %s",
+				p->lineno,
+				type);
 			return NULL;
 		}
 
@@ -222,21 +221,21 @@ char* openvcd_parse_version(openvcd_parser* p) {
 		}
 
 		if (p->current_token != NULL) {
-			if (version_text == NULL) {
-				version_text = strndup(
+			if (text == NULL) {
+				text = strndup(
 						p->current_token->literal,
 						p->current_token->length);
 			} else {
 				asprintf(&temp, "%s %s",
-						version_text,
+						text,
 						p->current_token->literal);
-				free(version_text);
-				version_text = temp;
+				free(text);
+				text = temp;
 			}
 		}
 	}
 
-	return version_text;
+	return text;
 }
 
 void openvcd_parse(openvcd_parser* p) {
@@ -258,3 +257,29 @@ void openvcd_parse(openvcd_parser* p) {
 bool openvcd_token_eq_str(openvcd_token* t, char* s) {
 	return (strncmp(t->literal, s, t->length) == 0);
 }
+
+char* openvcd_parse_version(openvcd_parser* p) {
+
+	/* consume $version */
+	openvcd_advance(p);
+
+	char* s = openvcd_parse_until(p, "$end", "$version");
+
+	/* consume $end */
+	openvcd_advance(p);
+
+	return s;
+}
+
+char* openvcd_parse_date(openvcd_parser* p) {
+	/* consume $date*/
+	openvcd_advance(p);
+
+	char* s = openvcd_parse_until(p, "$end", "$date");
+
+	/* consume $end */
+	openvcd_advance(p);
+
+	return s;
+}
+
