@@ -206,7 +206,9 @@ char* openvcd_parse_until(openvcd_parser* p, char* until, char* type) {
 	while(!openvcd_token_eq_str(p->next_token, until)) {
 		openvcd_advance(p);
 
-		if (p->state == OPENVCD_PARSER_STATE_EOF) {
+		if ((p->state == OPENVCD_PARSER_STATE_EOF) && \
+			(!openvcd_token_eq_str(p->next_token, until))) {
+
 			p->state = OPENVCD_PARSER_STATE_ERROR;
 			p->error = OPENVCD_ERROR_SYNTAX;
 			asprintf(&(p->error_string),
@@ -216,7 +218,8 @@ char* openvcd_parse_until(openvcd_parser* p, char* until, char* type) {
 			return NULL;
 		}
 
-		if (p->state != OPENVCD_PARSER_STATE_RUNNING) {
+		if ((p->state != OPENVCD_PARSER_STATE_RUNNING) && \
+			(!openvcd_token_eq_str(p->next_token, until))) {
 			return NULL;
 		}
 
@@ -233,6 +236,8 @@ char* openvcd_parse_until(openvcd_parser* p, char* until, char* type) {
 				text = temp;
 			}
 		}
+
+		if (p->state == OPENVCD_PARSER_STATE_EOF) { break; }
 	}
 
 	return text;
@@ -291,10 +296,18 @@ openvcd_timescale openvcd_parse_timescale(openvcd_parser* p) {
 	bool validating_unit;
 	bool no_timescale;
 
+	ts.u = openvcd_unit_undefined;
+	ts.n = -1;
+
 	/* consume $timescale*/
 	openvcd_advance(p);
 
 	tsstring = openvcd_parse_until(p, "$end", "$timescale");
+
+	if ((p->state != OPENVCD_PARSER_STATE_RUNNING) &&
+		(p->state != OPENVCD_PARSER_STATE_EOF))  {
+		return ts;
+	}
 
 	/* validate the timescale string and throw a syntax error if it fails
 	 * */
@@ -334,6 +347,7 @@ openvcd_timescale openvcd_parse_timescale(openvcd_parser* p) {
 
 	no_timescale = false;
 
+	/* #lizard forgives the complexity */
 	if (strcmp(unitstr, "s") == 0)       { ts.u = openvcd_unit_s;  goto unit_ok; }
 	else if (strcmp(unitstr, "ms") == 0) { ts.u = openvcd_unit_ms; goto unit_ok; }
 	else if (strcmp(unitstr, "us") == 0) { ts.u = openvcd_unit_us; goto unit_ok; }

@@ -103,7 +103,8 @@ typedef enum {
 	openvcd_unit_us,
 	openvcd_unit_ns,
 	openvcd_unit_ps,
-	openvcd_unit_fs
+	openvcd_unit_fs,
+	openvcd_unit_undefined, /* this is an error condition */
 } openvcd_unit;
 
 /* represents a time scale, per the spec there is only 1, 10, or 100 us, but

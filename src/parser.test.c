@@ -94,6 +94,57 @@ void test_init(void) {
 	free(init_test_input);
 }
 
+struct test_timescale_parsing_data {
+	char* input_string;
+	openvcd_timescale expected_timescale;
+};
+
+void test_timescale_parsing(void) {
+
+	static struct test_timescale_parsing_data tests[] = {
+		{"$timescale 1s $end",    {.n = 1,   .u = openvcd_unit_s}},
+		{"$timescale 10s $end",   {.n = 10,  .u = openvcd_unit_s}},
+		{"$timescale 100s $end",  {.n = 100, .u = openvcd_unit_s}},
+		{"$timescale 1ms $end",   {.n = 1,   .u = openvcd_unit_ms}},
+		{"$timescale 10ms $end",  {.n = 10,  .u = openvcd_unit_ms}},
+		{"$timescale 100ms $end", {.n = 100, .u = openvcd_unit_ms}},
+		{"$timescale 1us $end",   {.n = 1,   .u = openvcd_unit_us}},
+		{"$timescale 10us $end",  {.n = 10,  .u = openvcd_unit_us}},
+		{"$timescale 100us $end", {.n = 100, .u = openvcd_unit_us}},
+		{"$timescale 1ns $end",   {.n = 1,   .u = openvcd_unit_ns}},
+		{"$timescale 10ns $end",  {.n = 10,  .u = openvcd_unit_ns}},
+		{"$timescale 100ns $end", {.n = 100, .u = openvcd_unit_ns}},
+		{"$timescale 1ps $end",   {.n = 1,   .u = openvcd_unit_ps}},
+		{"$timescale 10ps $end",  {.n = 10,  .u = openvcd_unit_ps}},
+		{"$timescale 100ps $end", {.n = 100, .u = openvcd_unit_ps}},
+		{"$timescale 1fs $end",   {.n = 1,   .u = openvcd_unit_fs}},
+		{"$timescale 10fs $end",  {.n = 10,  .u = openvcd_unit_fs}},
+		{"$timescale 100fs $end", {.n = 100, .u = openvcd_unit_fs}},
+		{NULL, {0, 0}}
+	};
+
+	for (int i = 0 ; tests[i].input_string != NULL ; i++) {
+		openvcd_parser *p;
+		openvcd_timescale ts;
+		openvcd_input_source s;
+
+
+		s.input_string = tests[i].input_string,
+		p = openvcd_new_parser(OPENVCD_PARSER_STRING,
+				s,
+				strlen(tests[i].input_string));
+		p->current_token = openvcd_next_token(p);
+
+		ts = openvcd_parse_timescale(p);
+
+		check_parser_error(p);
+		should_equal(ts.n, tests[i].expected_timescale.n);
+		should_equal(ts.u, tests[i].expected_timescale.u);
+
+		openvcd_free_parser(p);
+	}
+}
+
 void test_parsing(void) {
 	openvcd_parser* p;
 	openvcd_input_source s;
@@ -208,4 +259,5 @@ int main(void) {
 	test_init();
 	test_lexing();
 	test_parsing();
+	test_timescale_parsing();
 }
