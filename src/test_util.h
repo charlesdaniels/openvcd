@@ -107,5 +107,11 @@
 		} \
 	} while(0); \
 
+#define parser_should_error(_parser) do { \
+		if (_parser->state != OPENVCD_PARSER_STATE_ERROR) { \
+			fail("parser should be in an error state but is not!%s\n", ""); \
+		} \
+	} while(0); \
+
 
 #endif /* TEST_UTIL */

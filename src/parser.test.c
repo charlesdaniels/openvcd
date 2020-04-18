@@ -143,6 +143,39 @@ void test_timescale_parsing(void) {
 
 		openvcd_free_parser(p);
 	}
+
+	/* now test somet things that should cause errors... */
+	static char* errors[] = {
+		"$timescale s $end",
+		"$timescale 1s",
+		"$timescale 1sa $end",
+		NULL,
+	};
+
+	for (int i = 0 ; errors[i] != NULL ; i++) {
+		openvcd_parser *p;
+		openvcd_input_source s;
+
+
+		s.input_string = errors[i],
+		p = openvcd_new_parser(OPENVCD_PARSER_STRING,
+				s,
+				strlen(tests[i].input_string));
+		p->current_token = openvcd_next_token(p);
+
+		openvcd_parse_timescale(p);
+
+
+		if (p->state != OPENVCD_PARSER_STATE_ERROR) {
+			printf("considering input string: %s\n", errors[i]);
+			fail("parser should be in an error state but is not!%s\n", "");
+		}
+
+		openvcd_free_parser(p);
+	}
+
+
+
 }
 
 void test_parsing(void) {
