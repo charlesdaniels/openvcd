@@ -32,6 +32,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "util.h"
+
 /**** TYPES ******************************************************************/
 
 /* Determines if the parser state object corresponds to a file stream or a
@@ -94,6 +96,22 @@ typedef enum {
 	(_err == OPENVCD_ERROR_TOKEN) ? "TOKEN" : \
 	(_err == OPENVCD_ERROR_SYNTAX) ? "SYNTAX" : \
 	(_err == OPENVCD_ERROR_ALLOC_FAILED) ? "ALLOC FAILED" : "UNKNOWN ERROR"
+
+typedef enum {
+	openvcd_unit_s,
+	openvcd_unit_ms,
+	openvcd_unit_us,
+	openvcd_unit_ns,
+	openvcd_unit_ps,
+	openvcd_unit_fs
+} openvcd_unit;
+
+/* represents a time scale, per the spec there is only 1, 10, or 100 us, but
+ * we allow any number, albeit with that set of units */
+typedef struct {
+	openvcd_unit u;
+	int n;
+} openvcd_timescale;
 
 typedef struct {
 
@@ -312,10 +330,22 @@ char* openvcd_parse_date(openvcd_parser* p);
  *
  * @param p
  * @param until
- * @param type 
+ * @param type
  *
  * @return
  */
 char* openvcd_parse_until(openvcd_parser* p, char* until, char* type);
+
+/**
+ * @brief Parse a timescale and return it.
+ *
+ * Note that since this method returns a value, not a pointer, you *must* check
+ * p->state, not simply compare the result against NULL.
+ *
+ * @param p
+ *
+ * @return
+ */
+openvcd_timescale openvcd_parse_timescale(openvcd_parser* p);
 
 #endif /* OPENVCD_PARSER_H */

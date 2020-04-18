@@ -283,3 +283,89 @@ char* openvcd_parse_date(openvcd_parser* p) {
 	return s;
 }
 
+openvcd_timescale openvcd_parse_timescale(openvcd_parser* p) {
+	openvcd_timescale ts;
+	char* tsstring;
+	char* unitstr;
+	char* numstr;
+	bool validating_unit;
+	bool no_timescale;
+
+	/* consume $timescale*/
+	openvcd_advance(p);
+
+	tsstring = openvcd_parse_until(p, "$end", "$timescale");
+
+	/* validate the timescale string and throw a syntax error if it fails
+	 * */
+	validating_unit = false;
+	for (size_t i = 0 ; i < strlen(tsstring) ; i++) {
+		if (validating_unit) {
+			if ( (tsstring[i] != 's') && \
+			     (tsstring[i] != 'm') && \
+			     (tsstring[i] != 'u') && \
+			     (tsstring[i] != 'n') && \
+			     (tsstring[i] != 'p') && \
+			     (tsstring[i] != 'f') ) {
+
+				/* syntax error ! */
+
+				p->state = OPENVCD_PARSER_STATE_ERROR;
+				p->error = OPENVCD_ERROR_SYNTAX;
+				asprintf(&(p->error_string),
+					"syntax error on line %lu, invalid character '%c' in timescale",
+					p->lineno, tsstring[i]);
+
+				free(tsstring);
+
+				return ts;
+
+			}
+		} else {
+			if ( (tsstring[i] != '0') && (tsstring[i] != '1') ) {
+				i--;
+				validating_unit = true;
+			}
+		}
+	}
+
+	unitstr = openvcd_charfilter(tsstring, "smunpf");
+	numstr = openvcd_charfilter(tsstring, "10");
+
+	no_timescale = false;
+
+	if (strcmp(unitstr, "s") == 0)       { ts.u = openvcd_unit_s;  goto unit_ok; }
+	else if (strcmp(unitstr, "ms") == 0) { ts.u = openvcd_unit_ms; goto unit_ok; }
+	else if (strcmp(unitstr, "us") == 0) { ts.u = openvcd_unit_us; goto unit_ok; }
+	else if (strcmp(unitstr, "ns") == 0) { ts.u = openvcd_unit_ns; goto unit_ok; }
+	else if (strcmp(unitstr, "ps") == 0) { ts.u = openvcd_unit_ps; goto unit_ok; }
+	else if (strcmp(unitstr, "fs") == 0) { ts.u = openvcd_unit_fs; goto unit_ok; }
+	no_timescale = true; /* goto should prevent this unless there was an error */
+
+unit_ok:
+	if (strcmp(numstr, "1") == 0)        { ts.n = 1;   goto num_ok; }
+	else if (strcmp(numstr, "10") == 0)  { ts.n = 10;  goto num_ok; }
+	else if (strcmp(numstr, "100") == 0) { ts.n = 100; goto num_ok; }
+	no_timescale = true;
+
+num_ok:
+
+	if (no_timescale) {
+		p->state = OPENVCD_PARSER_STATE_ERROR;
+		p->error = OPENVCD_ERROR_SYNTAX;
+		asprintf(&(p->error_string),
+			"syntax error on line %lu, invalid timescale '%s'",
+			p->lineno, tsstring);
+	}
+
+	free(unitstr);
+	free(numstr);
+	free(tsstring);
+
+
+	/* consume $end */
+	openvcd_advance(p);
+
+	return ts;
+
+}

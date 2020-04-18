@@ -6,7 +6,7 @@
 include ../opinionated.mk
 include ../config.mk
 
-OBJ = parser.o
+OBJ = parser.o util.o
 
 ifeq "$(TEST_WITH_VALGRIND)" "YES"
 	TESTCMD = sh ./test_with_valgrind.sh
@@ -14,8 +14,9 @@ else
 	TESTCMD =
 endif
 
-tests: parser.test
+tests: parser.test util.test
 > if [ "$(RUN_TESTS)" = "YES" ] ; then $(TESTCMD) ./parser.test ; fi
+> if [ "$(RUN_TESTS)" = "YES" ] ; then $(TESTCMD) ./util.test ; fi
 .PHONY: tests
 
 %.test: $(OBJ) %.test.c
