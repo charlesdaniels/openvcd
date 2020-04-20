@@ -10,7 +10,7 @@ workflows:
 jobs:
   tests:
     docker:
-      - image: herc/nocsim_ci:latest
+      - image: charlesdaniels/openvcd:latest
     steps:
       - checkout
       - run: make RUN_TESTS=YES TEST_WITH_VALGRIND=YES CFLAGS="-std=c99 -Wall -Wextra -pedantic -Werror -O0 -g3" -C src
