@@ -28,9 +28,10 @@ jobs:
       - image: charlesdaniels/openvcd:latest
     steps:
       - checkout
-      - run: yes | ikos-scan make -C src/
+      - run: sh -c 'yes | ikos-scan make -C src/' || true
       - run: mkdir -p /tmp/ikos_results
       - run: mv src/*.db /tmp/ikos_results
+      - run: for f in /tmp/ikos_results/*.db ; do ikos-report "$f" ; done
       - store_artifacts:
           path: /tmp/ikos_results
 
