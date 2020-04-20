@@ -82,7 +82,7 @@
 	} while(0)
 
 #define should_be_false(expr) do { \
-		if (!(expr)) { fail("'%s' should have been false and was not", #expr); } \
+		if ((expr)) { fail("'%s' should have been false and was not", #expr); } \
 	} while(0)
 
 #define should_be_null(expr) do { \

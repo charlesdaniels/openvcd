@@ -19,7 +19,40 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "khash.h"
+
 /**** UTILITIES **************************************************************/
+
+#define OPENVCD_UNUSED(x) (void)(x)
+
+/**
+ * @brief Works identically to kh_del(name, h, k), but key is a key rather than
+ * a khint_t.
+ *
+ * @param _name
+ * @param _h
+ * @param _key
+ *
+ * @return
+ */
+#define kh_delk(_name, _h, _key) do { \
+		khint_t _kh; \
+		_kh = kh_get(_name, _h, _key); \
+		if (_kh != kh_end(_h)) { \
+			kh_del(_name, _h, _kh); \
+		} \
+	} while(0)
+
+/**
+ * @brief Returns true if the specified khash contains the given key.
+ *
+ * @param _name
+ * @param _h
+ * @param _k the key (not a khint_t!)
+ */
+#define kh_containsk(_name, _h, _k) \
+	((kh_get(_name, _h, _k) != kh_end(_h)) ? \
+		(1 == kh_exist(_h, kh_get(_name, _h, _k))) : false)
 
 
 /**** PROTOTYPES *************************************************************/
