@@ -17,8 +17,19 @@ jobs:
 
   quality:
     docker:
-      - image: herc/nocsim_ci:latest
+      - image: charlesdaniels/openvcd:latest
     steps:
       - checkout
       - run: lizard src/
+
+  ikos:
+    docker:
+      - image: charlesdaniels/openvcd:latest
+    steps:
+      - checkout
+      - run: ikos-scan make
+      - run: pwd
+      - run: ls -lah
+      - run: ls -lah src/
+
 
