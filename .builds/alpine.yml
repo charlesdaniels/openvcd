@@ -1,0 +1,8 @@
+image: alpine/edge
+sources:
+  - https://github.com/charlesdaniels/openvcd
+tasks:
+  - tests: |
+    cd openvcd
+    make RUN_TESTS=YES TEST_WITH_VALGRIND=YES CFLAGS="-std=c99 -Wall -Wextra -pedantic -Werror -O0 -g3" -C src"
+    lizard src
