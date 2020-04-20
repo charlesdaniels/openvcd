@@ -28,10 +28,12 @@ jobs:
       - image: charlesdaniels/openvcd:latest
     steps:
       - checkout
-      - run: sh -c 'yes | ikos-scan make -C src/' || true
+      - run: sh -c 'yes | ikos-scan make -C src/ > ikos.log 2>&1' || true
       - run: mkdir -p /tmp/ikos_results
       - run: mv src/*.db /tmp/ikos_results
-      - run: for f in /tmp/ikos_results/*.db ; do ikos-report "$f" ; done
+      - run: mv ikos.log /tmp/ikos_results
+      - run: sh -c '!grep "The program is definitely UNSAFE" < /tmp/ikos_results/ikos.log'
+      - run: sh -c '!grep "The program is potentially UNSAFE" < /tmp/ikos_results/ikos.log'
       - store_artifacts:
           path: /tmp/ikos_results
 
