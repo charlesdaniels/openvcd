@@ -28,7 +28,7 @@ jobs:
       - image: charlesdaniels/openvcd:latest
     steps:
       - checkout
-      - run: ikos-scan make
+      - run: ikos-scan make -C src/
       - run: pwd
       - run: ls -lah
       - run: ls -lah src/
