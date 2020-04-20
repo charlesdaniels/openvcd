@@ -28,9 +28,8 @@ jobs:
       - image: charlesdaniels/openvcd:latest
     steps:
       - checkout
-      - run: ikos-scan make -C src/
-      - run: pwd
-      - run: ls -lah
-      - run: ls -lah src/
+      - run: sh -c 'yes | ikos-scan make -C src/'
+      - store_artifacts:
+        path: src/*.db
 
 
