@@ -32,8 +32,8 @@ jobs:
       - run: mkdir -p /tmp/ikos_results
       - run: mv src/*.db /tmp/ikos_results
       - run: mv ikos.log /tmp/ikos_results
-      - run: sh -c '!grep "The program is definitely UNSAFE" < /tmp/ikos_results/ikos.log'
-      - run: sh -c '!grep "The program is potentially UNSAFE" < /tmp/ikos_results/ikos.log'
+      - run: sh -c 'if grep "The program is definitely UNSAFE" < /tmp/ikos_results/ikos.log ; then exit 1 ; fi'
+      - run: sh -c 'if grep "The program is potentially UNSAFE" < /tmp/ikos_results/ikos.log ; then exit 1 ; fi'
       - store_artifacts:
           path: /tmp/ikos_results
 
