@@ -1,6 +1,8 @@
 image: freebsd/12.x
 sources:
   - https://github.com/charlesdaniels/openvcd
+packages:
+  - gmake
 tasks:
   - tests: |
       cd openvcd

@@ -1,6 +1,8 @@
 image: openbsd/latest
 sources:
   - https://github.com/charlesdaniels/openvcd
+packages:
+  - gmake
 tasks:
   - tests: |
       cd openvcd
