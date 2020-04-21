@@ -113,6 +113,10 @@ openvcd_var* openvcd_alloc_var(openvcd_scope* parent, openvcd_var_type type, uns
 	v->width = width;
 	v->reference = reference;
 	v->identifier_code = strdup(identifier_code);
+	if (v->identifier_code == NULL) {
+		free(v);
+		return NULL;
+	}
 
 	/* install ourselves into the parent scope */
 	if (v->parent != NULL) {
@@ -123,6 +127,7 @@ openvcd_var* openvcd_alloc_var(openvcd_scope* parent, openvcd_var_type type, uns
 		 * XXX: maybe should write a kh_putkv() for util.h?
 		 */
 		if (!khret) {
+			free(v->identifier_code);
 			free(v);
 			return NULL;
 		}
