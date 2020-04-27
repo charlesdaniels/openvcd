@@ -7,9 +7,12 @@
 
 openvcd_scope* openvcd_alloc_scope(openvcd_scope* parent, char* identifier, openvcd_scope_type type) {
 	openvcd_scope* s;
+	int khret;
+	khint_t k;
 
 	s = malloc(sizeof(openvcd_scope));
 	if (s == NULL) { return NULL; }
+
 
 	s->identifier = strdup(identifier);
 	if (s->identifier == NULL) {
@@ -34,9 +37,20 @@ openvcd_scope* openvcd_alloc_scope(openvcd_scope* parent, char* identifier, open
 		return NULL;
 	}
 
-	/* TODO: should install self into parent if non-null */
-
 	s->parent = parent;
+
+	/* install ourselves into the parent */
+	if (s->parent != NULL) {
+		k = kh_put(openvcd_mscope, s->parent->child_scopes, s->identifier, &khret);
+		if (!khret) {
+			kh_destroy(openvcd_mvar, s->child_variables);
+			kh_destroy(openvcd_mscope, s->child_scopes);
+			free(s->identifier);
+			free(s);
+			return NULL;
+		}
+		kh_val(s->parent->child_scopes, k) = s;
+	}
 
 	return s;
 
